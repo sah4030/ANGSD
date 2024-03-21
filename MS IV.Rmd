@@ -1,0 +1,324 @@
+---
+title: "MS IV"
+author: "Sophia"
+date: "2024-03-18"
+output:
+  prettydoc::html_pretty:
+    theme: cayman
+    highlight: github
+---
+
+#### STEP 1: Downloading all FASTQ Files
+Note: included 'fastq-dump' options '--readids' '--split-3' as my samples are paired-end reads. 
+```{bash fastq download, eval=FALSE}
+srun -n1 --pty --partition=angsd_class --mem=60G bash -i
+mamba activate angsd 
+
+cd /athena/angsd/scratch/sah4030/angsd_homework/Project/MSIV/FASTQ_files
+
+samples=("SRR21106059" "SRR21106060" "SRR21106063" "SRR21106064")
+
+for sample in "${samples[@]}"; do
+    prefetch "$sample"
+    srapath "$sample"
+    fastq-dump --readids --split-3 "/athena/angsd/scratch/sah4030/angsd_homework/Project/MSIV/FASTQ_files/$sample/$sample.sra"
+done
+
+ls 
+```
+
+```{bash check output step 1, eval=FALSE}
+SRR21106059	     SRR21106060_1.fastq  SRR21106063_2.fastq
+SRR21106059_1.fastq  SRR21106060_2.fastq  SRR21106064
+SRR21106059_2.fastq  SRR21106063	  SRR21106064_1.fastq
+SRR21106060	     SRR21106063_1.fastq  SRR21106064_2.fastq
+```
+
+
+|  **Sample** | **Condition** | **Replicate** |
+|:-----------:|:-------------:|:-------------:|
+| SRR21106059 |    Vehicle    |       2       |
+| SRR21106060 |    Vehicle    |       1       |
+| SRR21106063 |   Irinotecan  |       2       |
+| SRR21106064 |   Irinotecan  |       1       |
+
+
+#### STEP 2: Rename directories and files within 'FASTQ_files' directory to reflect Condition and Replicate Number of Sample. 
+```{bash rename, eval=FALSE}
+mv SRR21106059 Vehicle_Rep_2
+mv SRR21106059_1.fastq Vehicle_Rep_2_1.fastq
+mv SRR21106059_2.fastq Vehicle_Rep_2_2.fastq
+
+mv SRR21106060 Vehicle_Rep_1
+mv SRR21106060_1.fastq Vehicle_Rep_1_1.fastq
+mv SRR21106060_2.fastq Vehicle_Rep_1_2.fastq
+
+mv SRR21106063 Irinotecan_Rep_2
+mv SRR21106063_1.fastq Irinotecan_Rep_2_1.fastq
+mv SRR21106063_2.fastq Irinotecan_Rep_2_2.fastq
+
+mv SRR21106064 Irinotecan_Rep_1
+mv SRR21106064_1.fastq Irinotecan_Rep_1_1.fastq
+mv SRR21106064_2.fastq Irinotecan_Rep_1_2.fastq
+
+#Probably could have done this in a more streamlined manner but wanted to be very careful that I did this step correctly. 
+```
+
+#### STEP 3: Performing FastQC on Downloaded Fastq files 
+```{bash fastQC initial, eval=FALSE}
+for file in *.fastq; do
+fastqc "$file" --extract
+done
+
+ls
+
+Irinotecan_Rep_1                Vehicle_Rep_1
+Irinotecan_Rep_1_1.fastq        Vehicle_Rep_1_1.fastq
+Irinotecan_Rep_1_1_fastqc       Vehicle_Rep_1_1_fastqc
+Irinotecan_Rep_1_1_fastqc.html  Vehicle_Rep_1_1_fastqc.html
+Irinotecan_Rep_1_1_fastqc.zip   Vehicle_Rep_1_1_fastqc.zip
+Irinotecan_Rep_1_2.fastq        Vehicle_Rep_1_2.fastq
+Irinotecan_Rep_1_2_fastqc       Vehicle_Rep_1_2_fastqc
+Irinotecan_Rep_1_2_fastqc.html  Vehicle_Rep_1_2_fastqc.html
+Irinotecan_Rep_1_2_fastqc.zip   Vehicle_Rep_1_2_fastqc.zip
+Irinotecan_Rep_2                Vehicle_Rep_2
+Irinotecan_Rep_2_1.fastq        Vehicle_Rep_2_1.fastq
+Irinotecan_Rep_2_1_fastqc       Vehicle_Rep_2_1_fastqc
+Irinotecan_Rep_2_1_fastqc.html  Vehicle_Rep_2_1_fastqc.html
+Irinotecan_Rep_2_1_fastqc.zip   Vehicle_Rep_2_1_fastqc.zip
+Irinotecan_Rep_2_2.fastq        Vehicle_Rep_2_2.fastq
+Irinotecan_Rep_2_2_fastqc       Vehicle_Rep_2_2_fastqc
+Irinotecan_Rep_2_2_fastqc.html  Vehicle_Rep_2_2_fastqc.html
+Irinotecan_Rep_2_2_fastqc.zip   Vehicle_Rep_2_2_fastqc.zip
+```
+
+#### STEP 4: Obtain and examine the FastQC reports generated for each FASTQ file to assess the quality of the sequencing data. 
+```{bash fastQC view, eval=FALSE}
+exit 
+
+scp -i ~/.ssh/cacprivatekey.txt sah4030@cayuga-login1.cac.cornell.edu:/athena/angsd/scratch/sah4030/angsd_homework/Project/MSIV/FASTQ_files/Irinotecan_Rep_1_1_fastqc.html ~/Desktop/angsd/FastQC/
+
+scp -i ~/.ssh/cacprivatekey.txt sah4030@cayuga-login1.cac.cornell.edu:/athena/angsd/scratch/sah4030/angsd_homework/Project/MSIV/FASTQ_files/Irinotecan_Rep_1_2_fastqc.html ~/Desktop/angsd/FastQC/
+
+scp -i ~/.ssh/cacprivatekey.txt sah4030@cayuga-login1.cac.cornell.edu:/athena/angsd/scratch/sah4030/angsd_homework/Project/MSIV/FASTQ_files/Irinotecan_Rep_2_1_fastqc.html ~/Desktop/angsd/FastQC/
+
+scp -i ~/.ssh/cacprivatekey.txt sah4030@cayuga-login1.cac.cornell.edu:/athena/angsd/scratch/sah4030/angsd_homework/Project/MSIV/FASTQ_files/Irinotecan_Rep_2_2_fastqc.html ~/Desktop/angsd/FastQC/
+
+scp -i ~/.ssh/cacprivatekey.txt sah4030@cayuga-login1.cac.cornell.edu:/athena/angsd/scratch/sah4030/angsd_homework/Project/MSIV/FASTQ_files/Vehicle_Rep_1_1_fastqc.html ~/Desktop/angsd/FastQC/
+
+scp -i ~/.ssh/cacprivatekey.txt sah4030@cayuga-login1.cac.cornell.edu:/athena/angsd/scratch/sah4030/angsd_homework/Project/MSIV/FASTQ_files/Vehicle_Rep_1_2_fastqc.html ~/Desktop/angsd/FastQC/
+
+scp -i ~/.ssh/cacprivatekey.txt sah4030@cayuga-login1.cac.cornell.edu:/athena/angsd/scratch/sah4030/angsd_homework/Project/MSIV/FASTQ_files/Vehicle_Rep_2_1_fastqc.html ~/Desktop/angsd/FastQC/
+
+scp -i ~/.ssh/cacprivatekey.txt sah4030@cayuga-login1.cac.cornell.edu:/athena/angsd/scratch/sah4030/angsd_homework/Project/MSIV/FASTQ_files/Vehicle_Rep_2_2_fastqc.html ~/Desktop/angsd/FastQC/
+
+```
+
+#### FastQC results demonstrated poor quality in Sequence Duplication Levels and Per base sequence content.
+Sequence Duplication Levels: High sequence duplication levels suggest potential PCR artifacts or over-amplification during consider collapsing identical reads into unique counts during quantification to account for PCR duplicates. 
+
+Per Base Sequence Content: Deviations in per base sequence content may indicate biases in the sequencing process.
+
+A few of the samples also had a yellow "!" warning on per tile sequence quality. This warning suggests that there may be inconsistencies or abnormalities in the quality scores of the sequencing reads obtained from different areas of the flow cell. This could be indicative of technical issues during the sequencing process or variations in sequencing quality across different regions of the flow cell.
+
+I decided to perform Trim Galore based on these results of poor quality in the Sequence Duplication Levels and Per base sequence content. 
+
+#### STEP 5: Trim Galore: 
+The output from TrimGalore/cutadapt will give me a summary of the parameters that were used to do the trimming, including the adapter sequence itself, and tells me how many reads were processed and how many bases were trimmed off.
+```{bash trim galore, eval=FALSE}
+ssh -i ~/.ssh/cacprivatekey.txt sah4030@cayuga-login1.cac.cornell.edu
+mamba activate trim-galore
+
+cd /athena/angsd/scratch/sah4030/angsd_homework/Project/MSIV/
+mkdir TrimGalore
+
+#Trim Galore Irintoecan Rep 1
+trim_galore --paired --stringency 2 --output_dir /athena/angsd/scratch/sah4030/angsd_homework/Project/MSIV/FASTQ_files/TrimGalore/ \
+    Irinotecan_Rep_1_1.fastq  Irinotecan_Rep_1_2.fastq 
+    
+#Trim Galore Irintoecan Rep 2 
+trim_galore --paired --stringency 2 --output_dir /athena/angsd/scratch/sah4030/angsd_homework/Project/MSIV/FASTQ_files/TrimGalore/ \
+    Irinotecan_Rep_2_1.fastq  Irinotecan_Rep_2_2.fastq 
+
+#Trim Galore Vehicle Rep 1
+trim_galore --paired --stringency 2 --output_dir /athena/angsd/scratch/sah4030/angsd_homework/Project/MSIV/FASTQ_files/TrimGalore/ \
+    Vehicle_Rep_1_1.fastq Vehicle_Rep_1_2.fastq
+
+#Trim Galore Vehicle Rep 2
+trim_galore --paired --stringency 2 --output_dir /athena/angsd/scratch/sah4030/angsd_homework/Project/MSIV/FASTQ_files/TrimGalore/ \
+    Vehicle_Rep_2_1.fastq Vehicle_Rep_2_2.fastq
+```
+
+#### STEP 6: Performing FastQC Again, on Trimmed Files
+```{bash fastqc again, eval=FALSE}
+mamba activate angsd
+cd /athena/angsd/scratch/sah4030/angsd_homework/Project/MSIV/TrimGalore
+
+for file in *.fq; do
+fastqc "$file" --extract
+done
+```
+
+#### STEP 7: Obtain and examine the FastQC reports generated for the trimmed FASTQ files to assess the quality of the sequencing data. 
+```{bash fastQC view again, eval=FALSE}
+exit 
+
+for file in *fastqc.html; do
+scp -i ~/.ssh/cacprivatekey.txt sah4030@cayuga-login1.cac.cornell.edu:/athena/angsd/scratch/sah4030/angsd_homework/Project/MSIV/TrimGalore/"$file" ~/Desktop/angsd/FastQC/
+done
+```
+
+#### STEP 8: Obtain reference genome and annotation files from UCSC. 
+```{bash Q1Step1,eval = FALSE}
+cd /athena/angsd/scratch/sah4030/angsd_homework/Project/
+#Download Reference Genome
+wget https://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/hg38.2bit
+wget https://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/hg38.chrom.sizes
+wget https://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/hg38.fa.gz
+wget https://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/hg38.fa.masked.gz
+
+#Downlaod annotation file 
+wget https://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/genes/hg38.knownGene.gtf.gz
+
+#KnownGene track: This track provides the current version of GENCODE gene transcript models. GENCODE is a project that aims to annotate all evidence-based gene features in the human genome. The knownGene track is based on GENCODE annotations and is a widely used resource for gene annotations.
+cd /athena/angsd/scratch/sah4030/angsd_homework/Project/
+gunzip hg38.knownGene.gtf.gz
+gunzip hg38.fa.gz
+```
+
+### STEP 9: Prepare for index generation  
+I created the directory, "hg38_STARindex" in which I will stored the index I create.  
+```{bash Q2Step1,eval = FALSE}
+cd /athena/angsd/scratch/sah4030/angsd_homework/Project/
+mkdir hg38_STARindex #directory where I will store the index (--genomeDir)
+
+ls
+alignReads   hg38.chrom.sizes    hg38_STARindex       _STARtmp
+FASTQ_2.0    hg38.fa             Index                T2TGenome
+FASTQ_files  hg38.fa.masked.gz   index_generation.sh
+hg38.2bit    hg38.knownGene.gtf  ReferenceGenome
+```
+
+### STEP 10: Write script to generate index 
+```{bash script index_gen, eval=FALSE}
+#!/bin/bash -i
+#SBATCH --partition=angsd_class
+#SBATCH --nodes=1
+#SBATCH --ntasks=4
+#SBATCH --cpus-per-task=4
+#SBATCH --job-name=indexgen
+#SBATCH --time=06:00:00
+#SBATCH --mem=60G
+
+mamba activate angsd
+
+STAR \
+--runMode genomeGenerate \
+--runThreadN 4 \
+--genomeDir hg38_STARindex \
+--genomeFastaFiles hg38.fa \
+--sjdbGTFfile hg38.knownGene.gtf
+
+mamba deactivate
+exit
+```
+
+### STEP 11: Sbatch run of script to generate index
+```{bash run script, eval=FALSE}
+chmod +x index_generation.sh
+sbatch index_generation.sh
+```
+
+### STEP 12: Prepare for alignment
+```{bash prepare_alignment, eval=FALSE}
+cd /athena/angsd/scratch/sah4030/angsd_homework/Project/MSIV
+mkdir alignReads_MSIV
+```
+
+
+### STEP 13: Write script for alignment of all samples (for loop)
+```{bash run align script, eval=FALSE}
+#!/bin/bash -i
+#SBATCH --partition=angsd_class
+#SBATCH --nodes=1
+#SBATCH --ntasks=4
+#SBATCH --cpus-per-task=4
+#SBATCH --job-name=align
+#SBATCH --time=06:00:00
+#SBATCH --mem=60G
+
+mamba activate angsd
+
+for file_prefix in Irinotecan_Rep_1 Irinotecan_Rep_2 Vehicle_Rep_1 Vehicle_Rep_2
+do
+    STAR \
+    --runMode alignReads \
+    --runThreadN 4 \
+    --genomeDir /athena/angsd/scratch/sah4030/angsd_homework/Project/hg38_STARindex \
+    --readFilesIn "/athena/angsd/scratch/sah4030/angsd_homework/Project/MSIV/TrimGalore/${file_prefix}_1_val_1.fq" "/athena/angsd/scratch/sah4030/angsd_homework/Project/MSIV/TrimGalore/${file_prefix}_2_val_2.fq" \
+    --outFileNamePrefix "/athena/angsd/scratch/sah4030/angsd_homework/Project/alignReads_MSIV/${file_prefix}." \
+    --outSAMtype BAM SortedByCoordinate \
+    --outFilterMultimapNmax 1 \
+    --alignIntronMin 20 \
+    --alignIntronMax 200000 \
+    --outSAMattributes NH HI NM MD AS nM
+done
+
+mamba deactivate
+exit
+```
+
+### PARAMETERS I CHOSE AND WHY: 
+--outFilterMultimapNmax 1: This parameter specifies the max number of multiple alignments allowed for a read.By setting this parameter to 1 I am ensuring that each read is assigned to only one genomic location, even if it aligns equally well to multiple locations. 
+
+--alignIntronMin 20: This parameter specifies the minimum allowed length of an intron. It sets the smallest size of an intron that STAR will attempt to align. Setting this value too low might result in STAR failing to detect very short introns, while setting it too high might lead to increased computational time and memory usage.The average intron length in humans is around 5-10 kb, although this number greatly varies, with introns ranging from a few hundred base pairs to tens of thousands of base pairs.I decided to set it to around 20 base pairs to allow for the detection of relatively short introns
+
+--alignIntronMax 200000: This parameter specifies the maximum allowed length of an intron. It sets the upper limit for the size of introns that STAR will attempt to align. Setting this value too low might result in missing alignments for longer introns, while setting it too high might lead to increased computational time and memory usage as STAR tries to align very long introns. I decided to set it to 200,000 base pairs to accommodate the longest expected introns in the human genome.
+
+--outSAMattributes NH HI NM MD AS nM: Specifies which information to include in the optional SAM attribute. 
+
+NH: Number of reported alignments that contain the query in the current record. This field is useful for detecting multimapping reads.
+HI: SAM attribute representing the hit index (alignment sequence position) of the alignment. It's used to distinguish alignments that originate from the same query sequence but map to different locations in the reference genome.
+NM: Edit distance (number of mismatches) between the aligned sequence and the reference sequence. This field provides information about the number of differences between the aligned read and the reference genome.
+MD: String representation of the alignment details, indicating the differences between the read and the reference sequence (mismatches, insertions, deletions).
+AS: Alignment score, which represents the quality of the alignment. It's a numeric value calculated by the aligner based on various factors such as match/mismatch scores, gap penalties, etc.
+nM: SAM attribute indicating the edit distance normalized by the length of the alignment. It's similar to NM, but the edit distance is normalized by the alignment length, providing a measure of the mismatch rate.
+
+Note: 
+"_val_1.fq" refers to the validated or trimmed reads from the first end of the paired reads
+
+"_val_2.fq" refers to the validated or trimmed reads from the second end of the paired reads
+
+### STEP 13: Sbatch run of script to complete alignments. 
+```{bash run alignment script, eval=FALSE}
+chmod +x alignment.sh
+sbatch alignment.sh
+```
+
+### STEP 14: SAMTOOLS
+```{bash Q7Step1,eval = FALSE}
+mamba activate angsd
+
+for file in *.Aligned.sortedByCoord.out.bam; do
+samtools view -H $file
+
+#Generating an index file, which will allow for rapid retrieval of alignments by genomic coordinates. This is essential for many downstream analysis tools.
+samtools index $file
+
+#Generates various statistics about the alignments stored in the BAM file and saves these statistics to a file named Irinotecan_Rep1.flagstats.
+samtools flagstat $file > $file.flagstats
+
+#Generate statistics
+samtools stats $file > $file.stats
+
+# How many uniquely mapped reads were there?
+echo "Number of uniquely mapped reads: " $(samtools view -c -q10 $file)
+
+done
+
+```
+
+Number of uniquely mapped reads:  74113640
+Number of uniquely mapped reads:  59765652
+Number of uniquely mapped reads:  61209305
+Number of uniquely mapped reads:  77424890
